@@ -302,32 +302,36 @@ fn build_ui(
             let ch_lower = ch.to_ascii_lowercase();
             let is_uppercase = ch.is_ascii_uppercase();
 
-            // Check for movement/scroll keys
+            // Check for movement/scroll keys, but prefer hint input if this letter could start a hint.
             if ch_lower == 'h' || ch_lower == 'j' || ch_lower == 'k' || ch_lower == 'l' {
-                let (dx, dy) = match ch_lower {
-                    'h' => (-cfg_mouse.move_pixel_sensitivity, 0),
-                    'l' => (cfg_mouse.move_pixel_sensitivity, 0),
-                    'k' => (0, -cfg_mouse.move_pixel_sensitivity),
-                    'j' => (0, cfg_mouse.move_pixel_sensitivity),
-                    _ => (0, 0),
-                };
+                let prospective = format!("{}{}", input.borrow(), ch_lower);
+                let hint_would_match = hints_for_key.keys().any(|h| h.starts_with(&prospective));
 
-                // Check if scrolling (could be configurable)
-                if state.contains(gdk::ModifierType::SHIFT_MASK) {
-                    let _ = send(Request::Scroll {
-                        x: dx * cfg_mouse.scroll_pixel_sensitivity
-                            / cfg_mouse.move_pixel_sensitivity,
-                        y: dy * cfg_mouse.scroll_pixel_sensitivity
-                            / cfg_mouse.move_pixel_sensitivity,
-                    });
-                } else {
-                    let _ = send(Request::Move {
-                        x: dx,
-                        y: dy,
-                        absolute: false,
-                    });
+                if !hint_would_match {
+                    let (dx, dy) = match ch_lower {
+                        'h' => (-cfg_mouse.move_pixel_sensitivity, 0),
+                        'l' => (cfg_mouse.move_pixel_sensitivity, 0),
+                        'k' => (0, -cfg_mouse.move_pixel_sensitivity),
+                        'j' => (0, cfg_mouse.move_pixel_sensitivity),
+                        _ => (0, 0),
+                    };
+
+                    if state.contains(gdk::ModifierType::SHIFT_MASK) {
+                        let _ = send(Request::Scroll {
+                            x: dx * cfg_mouse.scroll_pixel_sensitivity
+                                / cfg_mouse.move_pixel_sensitivity,
+                            y: dy * cfg_mouse.scroll_pixel_sensitivity
+                                / cfg_mouse.move_pixel_sensitivity,
+                        });
+                    } else {
+                        let _ = send(Request::Move {
+                            x: dx,
+                            y: dy,
+                            absolute: false,
+                        });
+                    }
+                    return Propagation::Stop;
                 }
-                return Propagation::Stop;
             }
 
             // Check for numeric prefix (repeat count)
