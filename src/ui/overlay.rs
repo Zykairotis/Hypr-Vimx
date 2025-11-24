@@ -411,7 +411,7 @@ fn build_ui(
                     let mut app_guard = Some(app_ref.hold());
                     let (tx, ty) = (click_x, click_y);
                     gtk4::glib::timeout_add_local(
-                        std::time::Duration::from_millis(100),
+                        std::time::Duration::from_millis(25),
                         move || {
                             log::info!("OVERLAY: Sending Move request to ({}, {})", tx, ty);
                             let result = send(Request::Move {
@@ -450,7 +450,7 @@ fn build_ui(
                 let mut app_guard = Some(app_ref.hold());
                 let is_drag = action_type == "drag";
                 let (tx, ty, btn, rep) = (click_x, click_y, button, repeat);
-                gtk4::glib::timeout_add_local(std::time::Duration::from_millis(100), move || {
+                gtk4::glib::timeout_add_local(std::time::Duration::from_millis(25), move || {
                     if is_drag {
                         log::info!("OVERLAY: Executing DRAG sequence asynchronously:");
                         log::info!("  1. Mouse down at current position");
