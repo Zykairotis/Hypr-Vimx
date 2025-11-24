@@ -1,0 +1,5 @@
+target/
+.venv/
+*.log
+.claude*
+.DS_Store

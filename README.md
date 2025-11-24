@@ -1,33 +1,45 @@
-# Hypr-Vimx
+# rust-hintsx
 
-Starter home for a Hyprland + Neovim workflow: tiling Wayland desktop, modal editing, and a handful of helper scripts to glue them together. This repo is currently a skeleton so it can be cloned, tracked, and iterated on.
+Rust rewrite of **hints** (keyboard-driven GUI mouse control) targeting Wayland (Hyprland/Sway/Plasma) and X11. It shows overlaid hint labels for accessible UI elements and clicks them via a uinput mouse daemon.
 
-## Goals (early draft)
-- Keep Hyprland config lean and readable (per-feature include files, clear defaults).
-- Ship a Neovim setup focused on window/session control that mirrors Hyprland binds where sensible.
-- Provide small helpers (scripts/services) to bridge compositor state (workspaces, scratchpads) with the editor.
+## Binaries
+- `hintsd` — mouse daemon exposing a Unix socket at `/tmp/hints.socket`.
+- `hintsx` — main UI; gathers elements via AT-SPI (default) or OpenCV + grim fallback, renders GTK4 overlay, and sends click requests to `hintsd`.
 
-## Getting Started
+## Features
+
+- **Fast screenshot capture** using PPM format with stdout piping
+- **Parallel AT-SPI traversal** for efficient accessibility tree scanning
+- **Multiple backends**: AT-SPI (accessibility) and OpenCV (computer vision)
+- **Full keyboard control** with modifier support:
+  - Click once: `<hint>` (e.g., `jk`)
+  - Click multiple times: `<number><hint>` (e.g., `2jk` for double-click)
+  - Right click: `Shift + <hint>`
+  - Drag: `Alt + <hint>` (may not work on all Wayland compositors)
+  - Hover: `Ctrl + <hint>`
+  - Move mouse: `h` (left), `j` (down), `k` (up), `l` (right)
+  - Scroll: `Shift + h/j/k/l`
+  - Exit: `Esc`
+
+## Build
 ```bash
-git clone https://github.com/Zykairotis/Hypr-Vimx
-cd Hypr-Vimx
-# add your configs under ./hypr/ and ./nvim/ before installing
+cargo build --release
 ```
 
-Recommended layout once files are added:
-- `hypr/` → Hyprland config fragments (e.g., `hypr.conf`, `binds.conf`, `windows.conf`).
-- `nvim/` → Neovim config (Lua) with keymaps that parallel Hyprland binds.
-- `scripts/` → helper scripts (workspace toggles, screenshot wrappers, etc.).
+## Run
+1. Start the mouse daemon (needs uinput access):
+   ```bash
+   ./target/release/hintsd &
+   ```
+2. Launch the overlay:
+   ```bash
+   ./target/release/hintsx
+   ```
 
-Install (example using stow once files exist):
-```bash
-stow -t ~/.config hypr
-stow -t ~/.config nvim
-```
+## Config
+Configuration is read from `~/.config/hints/config.json` if present; otherwise built-in defaults are used (alphabet, keybindings, colors, OpenCV thresholds).
 
-## Contributing / Next Steps
-- Fill in the initial Hyprland and Neovim configs that match your current setup.
-- Add a short `scripts/README.md` describing each helper as it lands.
-- Use concise, imperative commits (e.g., "Add basic Hyprland layout"; "Mirror Hypr binds in Neovim").
-
-If you open issues/PRs, please include your compositor version, Neovim version, and any Wayland quirks hit during testing.
+## Notes
+- Wayland overlays use `gtk4-layer-shell`; make sure the compositor allows overlay surfaces (Hyprland/Sway/Plasma work; GNOME blocks layer-shell overlays by design).
+- OpenCV fallback requires `grim` for screenshots.
+- AT-SPI backend needs accessibility enabled (same prerequisites as the original Python project).
