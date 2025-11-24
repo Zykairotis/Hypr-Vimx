@@ -109,8 +109,8 @@ fn handle_connection(
             // GTK/layer-shell windows take time to release, especially on Wayland
             // Keep this short: overlay hides before sending the request. This wait
             // just lets the compositor release focus/input grabs.
-            log::info!("DAEMON: Waiting 220ms for overlay to close and focus to settle...");
-            std::thread::sleep(std::time::Duration::from_millis(220));
+            log::info!("DAEMON: Waiting 140ms for overlay to close and focus to settle...");
+            std::thread::sleep(std::time::Duration::from_millis(140));
             log::info!("DAEMON: Wait complete, proceeding with click");
 
             let btn = match button {
